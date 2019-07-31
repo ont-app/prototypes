@@ -1,0 +1,142 @@
+{:proto/Prototype
+ {:rdf/type #{:proto/PrototypeClass},
+  :rdfs/comment #{"  Refers to objects which can be described by elaboration properties.
+  "}},
+ :proto/AggregationPolicy
+ {:rdf/type #{:proto/PrototypeClass},
+  :rdfs/comment #{"
+  Refers to one of proto:Exclusive, proto:Inclusive, proto:Occlusive,
+   proto:Transclusive
+  
+  Exclusive meaning that it is an error for elaborating prototypes to make 
+  new assertions for this property.
+
+  Inclusive meaning that assertions made by elaborating prototypes will be
+  conjoined with other such assertions.
+
+  Occlusive meaning that assertions made by elaborating prototypes override
+
+  assertions made by superior nodes in the prototype lineage.
+
+
+  Transclusive meaning that assertions made by elaborating prototypes do not
+    attach to the referent, but rather inform the inference of the referent.
+    
+  "}},
+ :proto/ExclusiveAggregation
+ :rdfs/subClassOf #{:proto/AggregationPolicy},
+ :rdfs/comment #{"
+  Refers to an aggregation policy wherein it is an error for elaborating 
+  prototypes to make new assertions for properties in this class.
+  Examples would be unique identifiers and things like biological species.
+  "}},
+ :_blank/b3
+ {:rdf/type #{:owl/Restriction},
+  :owl/onProperty #{:proto/hasAggregationPolicy},
+  :owl/hasValue #{:proto/OcclusiveAggregation}},
+ :proto/InclusiveProperty
+ {:rdfs/subClassOf #{:proto/ElaborationProperty},
+  :owl/subClassOf #{:blank/b2}},
+ :proto/TransclusiveAggregation
+ #:rdfs{:subClassOf #{:proto/AggregationPolicy},
+        :comment
+        #{"
+        Refers to a policy wherein the property in question does not attach ot the resulting referent, but rather characterizes some aspect of the inference process. An example would be the proto:elaborates.
+        "}},
+ :proto/TransclusiveProperty
+ {:rdfs/subClassOf #{:proto/ElaborationProperty},
+  :owl/subClassOf #{:blank/b0}},
+ :proto/Elaboration
+ {:rdf/type #{:proto/PrototypeProperty},
+  :rdfs/comment
+  #{"
+  <prototype> elaboration <value>
+  Asserts that <value> is a property of <prototype>, subject to the rules of 
+  elaboration.
+  "}},
+ :proto/hasAggregationPolicy
+ #:rdfs{:domain #{:proto/ElaborationProperty},
+        :range #{:proto/AggregationPolicy},
+        :comment
+        #{"
+        This ensemble:
+  <property> proto:hasAggregationPolicy <policy>.
+  <parent> <property> <value>.
+  <child> <elaborates> <parent>.
+  
+  Asserts that <policy> applies when inferring <value> for <child>.
+
+  "}},
+ :proto/hasParameter
+ {:rdf/type #{:proto/TransclusiveProperty},
+  :rdfs/comment
+  #{"
+        <prototype> proto:hasParameter <property>
+
+Asserts that <prototype> should specify at least one value for
+<property> to be well-formed.
+
+        "}},
+ :proto/elaborates
+ {:rdf/type #{:proto/TransclusiveProperty :proto/ProtypeProperty},
+  :rdfs/comment
+  #{"
+  <subordinate> proto:elaborates <superordinate>.
+  
+  Asserts that <superordinate> acquires properties from <superordinate>,
+  subject to the proto:AggregationPolicy of said properties.
+        "},
+  :rdfs/domain #{:proto/Prototype},
+  :rdfs/range #{:proto/Prototype},
+  :owl/seeAlso #{:proto/AggregationPolicy}},
+ :proto/ExclusiveProperty
+ {:rdfs/subClassOf #{:proto/ElaborationProperty},
+  :owl/subClassOf #{:_blank/b1}},
+ :proto/PrototypeProperty
+ #:rdfs{:subClassof #{:rdf/Property},
+        :comment
+        #{"
+        Refers to a property that affects the description of a prototype's referent.
+        "}},
+ :proto/InclusiveAggregation
+ #:rdfs{:subClassOf #{:proto/AggregationPolicy},
+        :comment
+        #{"
+  Refers to an aggregation policy wherein assertions made by elaborating 
+  prototypes will be conjoined with other such assertions within the 
+  elaboration lineage. This is the default.
+  "}},
+ :proto/OcclusiveAggregation
+ #:rdfs{:subClassOf #{:proto/AggregationPolicy},
+        :comment
+        #{"
+  Refers to an aggregation policy wherein assertions made by elaborating 
+  prototypes override assertions made by superior nodes in the elaboration
+  lineage.
+  "}},
+ :proto/PrototypeClass
+ #:rdfs{:subClassof #{:rdf/Property},
+        :comment
+        #{"
+        Refers to a class pertinent to prototypes.
+        "}},
+ :proto/OcclusiveProperty
+ {:rdfs/subClassOf #{:proto/ElaborationProperty},
+  :owl/subClassOf #{:_blank/b3}},
+ :_blank/b2
+ {:rdf/type #{:owl/Restriction},
+  :owl/onProperty #{:proto/hasAggregationPolicy},
+  :owl/hasValue #{:proto/InclusiveAggregation}},
+ :proto/
+ #:rdfs{:comment
+        #{" 
+Defines a lightweight knowledge representation scheme that supports definitions of prototypes, which can appear in elaboration chains, whose properties aggregate according to an aggregation policy.
+"}},
+ :_blank/b0
+ {:rdf/type #{:owl/Restriction},
+  :owl/onProperty #{:proto/hasAggregationPolicy},
+  :owl/hasValue #{:proto/TransclusiveAggregation}},
+ :_blank/b1
+ {:rdf/type #{:owl/Restriction},
+  :owl/onProperty #{:proto/hasAggregationPolicy},
+  :owl/hasValue #{:proto/ExclusiveAggregation}}}

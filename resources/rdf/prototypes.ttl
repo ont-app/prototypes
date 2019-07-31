@@ -1,0 +1,163 @@
+@base  <http://rdf.naturallexicon.org/prototypes/ont#>.
+@prefix : <#>
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+
+
+<#> rdfs:comment """ 
+Defines a lightweight knowledge representation scheme that supports
+definitions of prototypes, which can appear in elaboration chains,
+whose properties aggregate according to an aggregation policy.
+""";
+.
+
+<#PrototypeClass> rdfs:subClassof rdf:Class;
+    rdfs:comment """
+        Refers to a class pertinent to prototypes.
+        """;
+    .
+
+<#Prototype> a :PrototypeClass;
+  rdfs:comment """
+  Refers to objects which can be described by elaboration properties.
+  """;
+.
+
+<#PrototypeProperty> rdfs:subClassof rdf:Property;
+    rdfs:comment """
+        Refers to a property that affects the description of a
+        prototype's referent.  
+        """; .
+
+
+<#elaborates> a :ProtypeProperty;
+    :aggregation :Transclusive;
+    
+    rdfs:comment """
+        <subordinate> proto:elaborates <superordinate>.
+  
+        Asserts that <superordinate> acquires properties from <superordinate>,
+        subject to the proto:ElaborationPolicy of said properties.
+
+    CODE SUPPORT: this drives a traversal from stage to stage, collecting
+    values from the attatched properties based on their aggregation 
+    policies.
+    
+        """;
+    rdfs:domain :Prototype;
+    rdfs:range :Prototype;
+    owl:seeAlso :AggregationPolicy;
+    .
+
+<#AggregationPolicy> a :PrototypeClass;
+  rdfs:comment """
+  Refers to one of proto:Exclusive, proto:Inclusive, proto:Occlusive,
+   proto:Transclusive
+  
+  Exclusive meaning that it is an error for elaborating prototypes to make new assertions 
+  for this property.
+
+  Inclusive meaning that assertions made by elaborating prototypes will be
+  conjoined with other such assertions.
+
+  Occlusive meaning that assertions made by elaborating prototypes override
+  assertions made by superior nodes in the prototype lineage.
+
+  Transclusive meaning that assertions made by elaborating prototypes do not
+    attach to the referent, but rather inform the inference of the referent.
+    
+  """
+.
+
+<#Exclusive> rdfs:subClassOf :AggregationPolicy;
+  rdfs:comment """
+  Refers to an aggregation policy wherein it is an error for elaborating 
+  prototypes to make new assertions for properties in this class.
+  Examples would be unique identifiers and things like biological species.
+  """
+.
+
+<#Inclusive> rdfs:subClassOf :AggregationPolicy;
+  rdfs:comment """
+  Refers to an aggregation policy wherein assertions made by elaborating 
+  prototypes will be conjoined with other such assertions within the 
+  elaboration lineage. This is the default.
+  """;
+.
+
+<#Occlusive> rdfs:subClassOf :AggregationPolicy;
+  rdfs:comment """
+  Refers to an aggregation policy wherein assertions made by subordinate
+  prototypes override assertions made by superior nodes in the elaboration
+  chain.
+  """;
+.
+
+<#Transclusive> rdfs:subClassOf :AggregationPolicy;
+    rdfs:comment """
+        Refers to a policy wherein the property in question does not
+        attach ot the resulting referent, but rather characterizes
+        some aspect of the inference process. An example would be the
+        proto:elaborates.  There is almost always some kind of code
+        support required for a transclusive property.
+        """;
+    .
+
+<#aggregation> a :PrototypeProperty;
+  :aggregation :Occlusive; 
+  rdfs:domain :PrototypeProperty;
+  rdfs:range :AggregationPolicy;
+  rdfs:comment """
+        This ensemble:
+  <property> proto:hasAggregationPolicy <policy>.
+  <parent> <property> <value>.
+  <child> <elaborates> <parent>.
+  
+  Asserts that <policy> applies when inferring <value> for <child>.
+
+  """;
+.
+
+<#defaultAggregation> a :PrototypeProperty;
+    :aggregation :Transclusive;
+    rdfs:domain rdf:Property;
+    rdfs:range :AggregationPolicy;
+    rdfs:comment """
+        <p> proto:defaultAggregation <policy>
+        asserts that <p> and its subproperties should be assigned 
+        to aggregation policy <policy> if otherwise unspecified.
+        CODE SUPPORT:
+        Generally speaking when inferring the description of a prototype, 
+        there will be a case statement keyed to
+        aggregation policies explicitly declared for various properties
+        asserted for your prototype, and default aggregation will inform
+        the default case. 
+        """;
+    .
+
+rdf:Property
+    rdfs:comment """
+        Default aggregation policy for all properties
+        is Inclusive.
+        """;
+    owl:subClassOf
+    [a owl:Restriction;
+     owl:onProperty :defaultAggregation;
+     owl:hasValue :Inclusive;
+    ];
+    .
+
+<#hasParameter> a :PrototypeProperty;
+    :aggregation :Transclusive;
+    rdfs:domain :Prototype;
+    rdfs:range :PrototypeProperty;
+    rdfs:comment """
+        <prototype> proto:hasParameter <property>
+
+    Asserts that the stages downstream from <prototype> should specify at least
+    one value for <property> to be result in a well-formed description.
+        """;
+    .
+        
+    
