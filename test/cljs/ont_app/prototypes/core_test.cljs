@@ -9,10 +9,10 @@
 
 (deftest ontology-test
   (testing "Ontology declaration should exist"
-    (is (not (nil? (proto/ontology))))))
+    (is (not (nil? proto/ontology)))))
 
 (def test-graph
-  (add (proto/ontology)
+  (add proto/ontology
        [[:test/p1 :proto/aggregation :proto/Occlusive]
         [:test/Stage0
          :rdf/type :proto/Prototype

@@ -20,6 +20,7 @@
             [lein-cljsbuild "1.1.7" :exclusions [[org.clojure/clojure]]]]
 
   :source-paths ["src/cljc" "src/clj" "src/cljs"]
+  :resource-paths ["resources" "target/cljsbuild"]
   :test-paths ["test/clj"]
   :cljsbuild {:builds
               [{:id "dev"

@@ -28,7 +28,8 @@
 (defn clear-caches! []
   "SIDE EFFECTS: resets caches to initial state."
   (reset! aggregation-policy-cache {})
-  (reset! ontology-cache nil))
+  ;; (reset! ontology-cache nil)
+  )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; FUN WITH READER MACROS
@@ -42,12 +43,9 @@
   #?(:cljs (add (g/make-graph)
                 ont/ontology-source)
      :clj
-     (let [source "resources/edn/prototypes.edn"]
+     (let [source "edn/prototypes.edn"]
        (igv-io/read-graph-from-source source))))
   
-
-
-
 (defn error [msg] #?(:clj (Error. msg)
                      :cljs (js/Error msg)))
 
@@ -55,15 +53,26 @@
 ;; NO READER MACROS BELOW THIS POINT
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def ontology-cache (atom nil))
-(defn ontology []
-  "The supporting ontology for prototypes, as an Igraph.graph, using keyword
-  identifiers interned per ont-app.vocabulary. 
-  "
-  (when-not @ontology-cache
-    (reset! ontology-cache
-            (read-ontology)))
-  @ontology-cache)
+;; (def ontology-cache (atom nil))
+;; (defn ontology []
+;;   "The supporting ontology for prototypes, as an Igraph.graph, using keyword
+;;   identifiers interned per ont-app.vocabulary. 
+;;   "
+;;   (when-not @ontology-cache
+;;     (reset! ontology-cache
+;;             (reduce-s-p-o igv/resolve-namespace-prefixes
+;;                           (g/make-graph)
+;;                           (read-ontology))))
+;;   @ontology-cache)
+
+^{:doc "
+  The supporting ontology for prototypes, as an Igraph.graph, using keyword
+  identifiers interned per ont-app.vocabulary. "
+  }
+(defonce ontology
+  (reduce-s-p-o igv/resolve-namespace-prefixes
+                                    (g/make-graph)
+                                    (read-ontology)))
 
 (def prefixed voc/prepend-prefix-declarations)
   
