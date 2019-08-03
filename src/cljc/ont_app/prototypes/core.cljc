@@ -23,8 +23,9 @@
   :vann/preferredNamespaceUri "http://rdf.naturallexicon.org/prototypes/ont#"
   })
 
+
 (declare aggregation-policy-cache)
-(declare ontology-cache)
+;; (declare ontology-cache)
 (defn clear-caches! []
   "SIDE EFFECTS: resets caches to initial state."
   (reset! aggregation-policy-cache {})
@@ -65,14 +66,17 @@
 ;;                           (read-ontology))))
 ;;   @ontology-cache)
 
+
 ^{:doc "
   The supporting ontology for prototypes, as an Igraph.graph, using keyword
   identifiers interned per ont-app.vocabulary. "
   }
 (defonce ontology
-  (reduce-s-p-o igv/resolve-namespace-prefixes
-                                    (g/make-graph)
-                                    (read-ontology)))
+  (let []
+    (voc/clear-caches!)
+    (reduce-s-p-o igv/resolve-namespace-prefixes
+                  (g/make-graph)
+                  (read-ontology))))
 
 (def prefixed voc/prepend-prefix-declarations)
   
@@ -267,16 +271,25 @@ Where
                    {}
                    [prototype]))
 
-(defn install-description [g prototype]
-  "Returns <g'>, replacing <prototype> in <g> with its description 
-Where
-<g> is a graph containing the elaboration chain and supporting
-  declarations, such as property aggregation policies.
-<prototype> is the endpoint of some elaboration chain
+(defn install-description 
+  "Returns <target>, adding the description inferred from  <prototype> in <source>.
+  If <source> and <target> are the same (the default), <prototype> will be
+      overwritten.
+  Where
+  <source> is a graph containing the elaboration chain and supporting
+      declarations, such as property aggregation policies.
+  <target> is any igraph. By default it is <source>.
+  <prototype> is the endpoint of some elaboration chain in <source>
 "
-  (let [description (get-description g prototype)]
-    (add (subtract g [prototype])
-         {prototype description})))
+  ([g prototype]
+   (install-description g prototype g)
+   )
+  ([source prototype target]
+   (let [description (get-description source prototype)]
+     (add (if (= source target)
+            (subtract target [prototype])
+            target)
+          {prototype description}))))
 
 (comment
   (igraph/traverse catalog resolve-prototype
