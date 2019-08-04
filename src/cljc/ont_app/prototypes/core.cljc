@@ -1,35 +1,23 @@
 (ns ont-app.prototypes.core
   (:require
    [clojure.set :as set]
-   ;; [clojure.tools.logging :as log]
-   
    [ont-app.igraph.core :as igraph :refer [add subtract traverse reduce-s-p-o]]
    [ont-app.igraph.graph :as g]
    [ont-app.vocabulary.core :as voc]
+   [ont-app.prototypes.ont :as ont]   
    [ont-app.igraph-vocabulary.core :as igv]
    [taoensso.timbre :as log]
-   #?(:clj [ont-app.igraph-vocabulary.io :as igv-io])
-   #?(:cljs [ont-app.prototypes.ont :as ont])
-   ;; normal form translation of prototypes.ttl, generated at compile time
-   ;; via macro and code in clj-based ont-app.igraph-vocabulary.io
    )
 
   )
 
-(voc/cljc-put-ns-meta!
- 'ont-app.prototypes.core
- {
-  :vann/preferredNamespacePrefix "proto"
-  :vann/preferredNamespaceUri "http://rdf.naturallexicon.org/prototypes/ont#"
-  })
 
 
 (declare aggregation-policy-cache)
-;; (declare ontology-cache)
+
 (defn clear-caches! []
-  "SIDE EFFECTS: resets caches to initial state."
+  "SIDE EFFECT: resets caches to initial state."
   (reset! aggregation-policy-cache {})
-  ;; (reset! ontology-cache nil)
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -40,13 +28,6 @@
    ;; (defn on-js-reload [])
    )
 
-(defn read-ontology []
-  #?(:cljs (add (g/make-graph)
-                ont/ontology-source)
-     :clj
-     (let [source "edn/prototypes.edn"]
-       (igv-io/read-graph-from-source source))))
-  
 (defn error [msg] #?(:clj (Error. msg)
                      :cljs (js/Error msg)))
 
@@ -54,32 +35,13 @@
 ;; NO READER MACROS BELOW THIS POINT
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (def ontology-cache (atom nil))
-;; (defn ontology []
-;;   "The supporting ontology for prototypes, as an Igraph.graph, using keyword
-;;   identifiers interned per ont-app.vocabulary. 
-;;   "
-;;   (when-not @ontology-cache
-;;     (reset! ontology-cache
-;;             (reduce-s-p-o igv/resolve-namespace-prefixes
-;;                           (g/make-graph)
-;;                           (read-ontology))))
-;;   @ontology-cache)
-
-
-^{:doc "
-  The supporting ontology for prototypes, as an Igraph.graph, using keyword
-  identifiers interned per ont-app.vocabulary. "
-  }
-(defonce ontology
-  (let []
-    (voc/clear-caches!)
-    (reduce-s-p-o igv/resolve-namespace-prefixes
-                  (g/make-graph)
-                  (read-ontology))))
+(def ontology
+  "The supporting ontology for prototypes, as an Igraph.graph, using keyword
+   identifiers interned per ont-app.vocabulary. "
+  ont/ontology)
 
 (def prefixed voc/prepend-prefix-declarations)
-  
+
 (def agg-policies-sparql-query
   (prefixed
    "
@@ -292,9 +254,6 @@ Where
           {prototype description}))))
 
 (comment
-  (igraph/traverse catalog resolve-prototype
-                   {:on-missing-parameter {}} ;; context. handle :addressedTo
-                   {} [:catalog/CatalogList])
 
   )
 
