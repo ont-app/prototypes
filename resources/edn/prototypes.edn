@@ -1,96 +1,96 @@
-{:http://rdf.naturallexicon.org/prototypes/ont#Prototype
- {:rdf/type
-  #{:http://rdf.naturallexicon.org/prototypes/ont#PrototypeClass},
-  :rdfs/comment
-  #{"\n  Refers to objects which can be described by elaboration properties.\n  "}},
- :http://rdf.naturallexicon.org/prototypes/ont#
- #:rdfs{:comment
-        #{" \nDefines a lightweight knowledge representation scheme that supports\ndefinitions of prototypes, which can appear in elaboration chains,\nwhose properties aggregate according to an aggregation policy.\n"}},
- :http://rdf.naturallexicon.org/prototypes/ont#AggregationPolicy
- {:rdf/type
-  #{:http://rdf.naturallexicon.org/prototypes/ont#PrototypeClass},
-  :rdfs/comment
-  #{"\n  Refers to one of proto:Exclusive, proto:Inclusive, proto:Occlusive,\n   proto:Transclusive\n  \n  Exclusive meaning that it is an error for elaborating prototypes to make new assertions \n  for this property.\n\n  Inclusive meaning that assertions made by elaborating prototypes will be\n  conjoined with other such assertions.\n\n  Occlusive meaning that assertions made by elaborating prototypes override\n  assertions made by superior nodes in the prototype lineage.\n\n  Transclusive meaning that assertions made by elaborating prototypes do not\n    attach to the referent, but rather inform the inference of the referent.\n    \n  "}},
- :http://rdf.naturallexicon.org/prototypes/ont#aggregation
- {:rdf/type
-  #{:http://rdf.naturallexicon.org/prototypes/ont#PrototypeProperty},
-  :http://rdf.naturallexicon.org/prototypes/ont#aggregation
-  #{:http://rdf.naturallexicon.org/prototypes/ont#Occlusive},
-  :rdfs/domain
-  #{:http://rdf.naturallexicon.org/prototypes/ont#PrototypeProperty},
-  :rdfs/range
-  #{:http://rdf.naturallexicon.org/prototypes/ont#AggregationPolicy},
-  :rdfs/comment
-  #{"\n        This ensemble:\n  <property> proto:hasAggregationPolicy <policy>.\n  <parent> <property> <value>.\n  <child> <elaborates> <parent>.\n  \n  Asserts that <policy> applies when inferring <value> for <child>.\n\n  "}},
- :http://rdf.naturallexicon.org/prototypes/ont#Transclusive
+{:http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#Inclusive
  #:rdfs{:subClassOf
-        #{:http://rdf.naturallexicon.org/prototypes/ont#AggregationPolicy},
-        :comment
-        #{"\n        Refers to a policy wherein the property in question does not\n        attach ot the resulting referent, but rather characterizes\n        some aspect of the inference process. An example would be the\n        proto:elaborates.  There is almost always some kind of code\n        support required for a transclusive property.\n        "}},
- :http://rdf.naturallexicon.org/prototypes/ont#hasParameter
- {:rdf/type
-  #{:http://rdf.naturallexicon.org/prototypes/ont#PrototypeProperty},
-  :http://rdf.naturallexicon.org/prototypes/ont#aggregation
-  #{:http://rdf.naturallexicon.org/prototypes/ont#Transclusive},
-  :rdfs/domain
-  #{:http://rdf.naturallexicon.org/prototypes/ont#Prototype},
-  :rdfs/range
-  #{:http://rdf.naturallexicon.org/prototypes/ont#PrototypeProperty},
-  :rdfs/comment
-  #{"\n        <prototype> proto:hasParameter <property>\n\n    Asserts that the stages downstream from <prototype> should specify at least\n    one value for <property> to be result in a well-formed description.\n        "}},
- :http://rdf.naturallexicon.org/prototypes/ont#Inclusive
- #:rdfs{:subClassOf
-        #{:http://rdf.naturallexicon.org/prototypes/ont#AggregationPolicy},
+        #{:http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#AggregationPolicy},
         :comment
         #{"\n  Refers to an aggregation policy wherein assertions made by elaborating \n  prototypes will be conjoined with other such assertions within the \n  elaboration lineage. This is the default.\n  "}},
- :http://rdf.naturallexicon.org/prototypes/ont#Occlusive
- #:rdfs{:subClassOf
-        #{:http://rdf.naturallexicon.org/prototypes/ont#AggregationPolicy},
-        :comment
-        #{"\n  Refers to an aggregation policy wherein assertions made by subordinate\n  prototypes override assertions made by superior nodes in the elaboration\n  chain.\n  "}},
- :http://rdf.naturallexicon.org/prototypes/ont#elaborates
+ :http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#elaborates
  {:rdf/type
-  #{:http://rdf.naturallexicon.org/prototypes/ont#ProtypeProperty},
-  :http://rdf.naturallexicon.org/prototypes/ont#aggregation
-  #{:http://rdf.naturallexicon.org/prototypes/ont#Transclusive},
+  #{:http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#ProtypeProperty},
+  :http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#aggregation
+  #{:http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#Transclusive},
   :rdfs/comment
   #{"\n        <subordinate> proto:elaborates <superordinate>.\n  \n        Asserts that <superordinate> acquires properties from <superordinate>,\n        subject to the proto:ElaborationPolicy of said properties.\n\n    CODE SUPPORT: this drives a traversal from stage to stage, collecting\n    values from the attatched properties based on their aggregation \n    policies.\n    \n        "},
   :rdfs/domain
-  #{:http://rdf.naturallexicon.org/prototypes/ont#Prototype},
+  #{:http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#Prototype},
   :rdfs/range
-  #{:http://rdf.naturallexicon.org/prototypes/ont#Prototype},
+  #{:http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#Prototype},
   :owl/seeAlso
-  #{:http://rdf.naturallexicon.org/prototypes/ont#AggregationPolicy}},
- :_-132384058/b0
- {:rdf/type #{:owl/Restriction},
-  :owl/onProperty
-  #{:http://rdf.naturallexicon.org/prototypes/ont#defaultAggregation},
-  :owl/hasValue
-  #{:http://rdf.naturallexicon.org/prototypes/ont#Inclusive}},
+  #{:http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#AggregationPolicy}},
+ :http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#hasParameter
+ {:rdf/type
+  #{:http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#PrototypeProperty},
+  :http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#aggregation
+  #{:http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#Transclusive},
+  :rdfs/domain
+  #{:http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#Prototype},
+  :rdfs/range
+  #{:http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#PrototypeProperty},
+  :rdfs/comment
+  #{"\n        <prototype> proto:hasParameter <property>\n\n    Asserts that the stages downstream from <prototype> should specify at least\n    one value for <property> to be result in a well-formed description.\n        "}},
+ :http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#defaultAggregation
+ {:rdf/type
+  #{:http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#PrototypeProperty},
+  :http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#aggregation
+  #{:http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#Transclusive},
+  :rdfs/domain #{:rdf/Property},
+  :rdfs/range
+  #{:http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#AggregationPolicy},
+  :rdfs/comment
+  #{"\n        <p> proto:defaultAggregation <policy>\n        asserts that <p> and its subproperties should be assigned \n        to aggregation policy <policy> if otherwise unspecified.\n        CODE SUPPORT:\n        Generally speaking when inferring the description of a prototype, \n        there will be a case statement keyed to\n        aggregation policies explicitly declared for various properties\n        asserted for your prototype, and default aggregation will inform\n        the default case. \n        "}},
+ :http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#Occlusive
+ #:rdfs{:subClassOf
+        #{:http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#AggregationPolicy},
+        :comment
+        #{"\n  Refers to an aggregation policy wherein assertions made by subordinate\n  prototypes override assertions made by superior nodes in the elaboration\n  chain.\n  "}},
+ :http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#Exclusive
+ #:rdfs{:subClassOf
+        #{:http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#AggregationPolicy},
+        :comment
+        #{"\n  Refers to an aggregation policy wherein it is an error for elaborating \n  prototypes to make new assertions for properties in this class.\n  Examples would be unique identifiers and things like biological species.\n  "}},
+ :http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#Prototype
+ {:rdf/type
+  #{:http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#PrototypeClass},
+  :rdfs/comment
+  #{"\n  Refers to objects which can be described by elaboration properties.\n  "}},
  :rdf/Property
  {:rdfs/comment
   #{"\n        Default aggregation policy for all properties\n        is Inclusive.\n        "},
-  :owl/subClassOf #{:_-132384058/b0}},
- :http://rdf.naturallexicon.org/prototypes/ont#defaultAggregation
- {:rdf/type
-  #{:http://rdf.naturallexicon.org/prototypes/ont#PrototypeProperty},
-  :http://rdf.naturallexicon.org/prototypes/ont#aggregation
-  #{:http://rdf.naturallexicon.org/prototypes/ont#Transclusive},
-  :rdfs/domain #{:rdf/Property},
-  :rdfs/range
-  #{:http://rdf.naturallexicon.org/prototypes/ont#AggregationPolicy},
-  :rdfs/comment
-  #{"\n        <p> proto:defaultAggregation <policy>\n        asserts that <p> and its subproperties should be assigned \n        to aggregation policy <policy> if otherwise unspecified.\n        CODE SUPPORT:\n        Generally speaking when inferring the description of a prototype, \n        there will be a case statement keyed to\n        aggregation policies explicitly declared for various properties\n        asserted for your prototype, and default aggregation will inform\n        the default case. \n        "}},
- :http://rdf.naturallexicon.org/prototypes/ont#PrototypeClass
+  :owl/subClassOf #{:_-1401025001/b0}},
+ :http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#PrototypeClass
  #:rdfs{:subClassof #{:rdf/Class},
         :comment
         #{"\n        Refers to a class pertinent to prototypes.\n        "}},
- :http://rdf.naturallexicon.org/prototypes/ont#PrototypeProperty
+ :http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#Transclusive
+ #:rdfs{:subClassOf
+        #{:http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#AggregationPolicy},
+        :comment
+        #{"\n        Refers to a policy wherein the property in question does not\n        attach ot the resulting referent, but rather characterizes\n        some aspect of the inference process. An example would be the\n        proto:elaborates.  There is almost always some kind of code\n        support required for a transclusive property.\n        "}},
+ :http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#AggregationPolicy
+ {:rdf/type
+  #{:http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#PrototypeClass},
+  :rdfs/comment
+  #{"\n  Refers to one of proto:Exclusive, proto:Inclusive, proto:Occlusive,\n   proto:Transclusive\n  \n  Exclusive meaning that it is an error for elaborating prototypes to make new assertions \n  for this property.\n\n  Inclusive meaning that assertions made by elaborating prototypes will be\n  conjoined with other such assertions.\n\n  Occlusive meaning that assertions made by elaborating prototypes override\n  assertions made by superior nodes in the prototype lineage.\n\n  Transclusive meaning that assertions made by elaborating prototypes do not\n    attach to the referent, but rather inform the inference of the referent.\n    \n  "}},
+ :http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#PrototypeProperty
  #:rdfs{:subClassof #{:rdf/Property},
         :comment
         #{"\n        Refers to a property that affects the description of a\n        prototype's referent.  \n        "}},
- :http://rdf.naturallexicon.org/prototypes/ont#Exclusive
- #:rdfs{:subClassOf
-        #{:http://rdf.naturallexicon.org/prototypes/ont#AggregationPolicy},
-        :comment
-        #{"\n  Refers to an aggregation policy wherein it is an error for elaborating \n  prototypes to make new assertions for properties in this class.\n  Examples would be unique identifiers and things like biological species.\n  "}}}
+ :http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#aggregation
+ {:rdf/type
+  #{:http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#PrototypeProperty},
+  :http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#aggregation
+  #{:http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#Occlusive},
+  :rdfs/domain
+  #{:http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#PrototypeProperty},
+  :rdfs/range
+  #{:http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#AggregationPolicy},
+  :rdfs/comment
+  #{"\n        This ensemble:\n  <property> proto:hasAggregationPolicy <policy>.\n  <parent> <property> <value>.\n  <child> <elaborates> <parent>.\n  \n  Asserts that <policy> applies when inferring <value> for <child>.\n\n  "}},
+ :http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#
+ #:rdfs{:comment
+        #{" \nDefines a lightweight knowledge representation scheme that supports\ndefinitions of prototypes, which can appear in elaboration chains,\nwhose properties aggregate according to an aggregation policy.\n"}},
+ :_-1401025001/b0
+ {:rdf/type #{:owl/Restriction},
+  :owl/onProperty
+  #{:http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#defaultAggregation},
+  :owl/hasValue
+  #{:http+58++47++47+rdf.naturallexicon.org+47+prototypes+47+ont#Inclusive}}}

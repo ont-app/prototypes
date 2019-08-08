@@ -11,6 +11,12 @@
 
   )
 
+(voc/cljc-put-ns-meta!
+ 'ont-app.prototypes.core
+ {
+  :voc/mapsTo 'ont-app.prototypes.ont
+  }
+ )
 
 
 (declare aggregation-policy-cache)
