@@ -3,7 +3,7 @@
    :vann/preferredNamespaceUri "http://example.com/"
    }
   (:require [clojure.test :refer :all]
-            [ont-app.igraph.core :refer [normal-form add]]
+            [ont-app.igraph.core :as igraph :refer [normal-form add]]
             [ont-app.igraph.graph :as g]
             [ont-app.prototypes.core :as proto]
             [ont-app.vocabulary.core :as voc]
@@ -62,6 +62,27 @@
               :rdf/type #{:proto/Prototype}})))
     ))
 
-#_(deftest a-test
-  (testing "FIXME, I fail."
-    (is (= 0 1))))
+(def sub-property-test-graph
+  (add proto/ontology
+       [[:test/subProp
+         :rdfs/subPropertyOf :test/testParameter]
+        [:test/stage0
+         :rdf/type :proto/Prototype
+         :proto/hasParameter :test/testParameter
+         :proto/hasParameter :test/otherParameter
+         ]
+        [:test/stage1
+         :proto/elaborates :test/stage0
+         :test/subProp 1
+         ]]))
+       
+  
+(deftest sub-property-support
+  (testing "Sub-properties should satisfy parameters for their supers."
+    (is (= (proto/get-description sub-property-test-graph :test/stage1)
+           {:test/subProp #{1},
+            :rdf/type #{:proto/Prototype},
+            ;; subProp fulfills testParameter...
+            :proto/hasParameter #{:test/otherParameter}}))
+    ))
+

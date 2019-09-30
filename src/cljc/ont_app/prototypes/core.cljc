@@ -156,6 +156,7 @@ Where
   [aggregation-policy context acc p os]
   {:pre [(map? acc)]
    }
+  #dbg
   (letfn [(get-missing-parameter-handler [parameter]
             (if-let [on-missing-parameter (:on-missing-parameter context)]
               (on-missing-parameter parameter)
@@ -163,6 +164,7 @@ Where
           
           (collect-parameters
             [acc parameter]
+            
             (if (or (acc parameter)
                     ((into #{} (:p-history context))
                      parameter))
@@ -241,8 +243,9 @@ Where
   <p-history> := #{<addressed-property>, ...}
   <addressed-property> is a property which was encounted and dealt with at some
     downstream stage, and is therefore not an open parameter. This is
-    only neccessary if the for-properties of the calling elaborate is not
-    :all, and includes the hasParameter property.
+    only neccessary if the for-properties of the calling elaborate is
+    :all, or includes the hasParameter property. Sub-properties (declared with
+    rdfs/subPropertyOf fullfill parameters for their super-properties.
 
   "
   ;; TODO consider moving on-missing-parameter to the arg list.
@@ -255,20 +258,27 @@ Where
          (map? acc)
          ]
    }
+
    (let [stage (first q)
+         sub-property-of* (igraph/transitive-closure :rdfs/subPropertyOf)
+                           
+         collect-super-properties (fn [parameters p]
+                                    (reduce conj
+                                            parameters
+                                            (g p sub-property-of*)))
+
+ 
          update-context (fn [context desc]
-                          (if (= for-properties :all)
-                            context
-                            ;;else
-                            (if (for-properties :proto/hasParameter)
-                              ;; parameters need to know what's been addressed
-                              ;; downstream ...
-                              (assoc context
-                                     :p-history (into
-                                                 (set (keys desc))
-                                                 (:p-history context)))
-                              ;; else
-                              context)))
+                          (if (or (= for-properties :all)
+                                  (for-properties :proto/hasParameter))
+                            (assoc context
+                                   :p-history (reduce
+                                               collect-super-properties
+                                               (into #{} (:p-history context))
+                                               (keys desc)))
+
+                            ;; else
+                            context))
          ;; we may filter on one or more properties...
          sub-desc (if (= for-properties :all)
                     identity
