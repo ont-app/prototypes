@@ -1,5 +1,5 @@
 (defproject ont-app/prototypes "0.1.0-SNAPSHOT"
-  :description "FIXME: write this!"
+  :description "A lightweight knowledge-rep ontology with supporting code. Allows for default logic."
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
@@ -34,16 +34,18 @@
                            ;; in the default browser once Figwheel has
                            ;; started and compiled your application.
                            ;; Comment this out once it no longer serves you.
-                           :open-urls ["http://localhost:3451/index.html"]}
+                           ;; :open-urls ["http://localhost:3451/index.html"]
+                           }
 
-                :compiler {:main prototypes.core
+                :compiler {:main ont-app.prototypes.core ;;prototypes.core
                            :asset-path "js/compiled/out"
                            :output-to "resources/public/js/compiled/prototypes.js"
                            :output-dir "resources/public/js/compiled/out"
                            :source-map-timestamp true
                            ;; To console.log CLJS data-structures make sure you enable devtools in Chrome
                            ;; https://github.com/binaryage/cljs-devtools
-                           :preloads [devtools.preload]}}
+                           :preloads [figwheel.preload
+                                      devtools.preload]}}
                ;; This next build is a compressed minified build for
                ;; production. You can build this with:
                ;; lein cljsbuild once min
@@ -55,14 +57,19 @@
                            :pretty-print false}}]}
 
   :figwheel {;; :http-server-root "public" ;; default and assumes "resources"
-             :server-port 3451 ;; default
+             ;;:server-port 3451 ;; default
+             :server-port ~(if-let [p (System/getenv "FIGWHEEL_SERVER_PORT")]
+                             (read-string p)
+                             3451)
              ;; :server-ip "127.0.0.1"
 
              :css-dirs ["resources/public/css"] ;; watch and update CSS
 
              ;; Start an nREPL server into the running figwheel process
-             ;; :nrepl-port 7888
-
+             ;; :nrepl-port 7888 
+             :nrepl-port ~(if-let [p (System/getenv "NREPL_PORT")]
+                             (read-string p)
+                             7888)
              ;; Server Ring Handler (optional)
              ;; if you want to embed a ring handler into the figwheel http-kit
              ;; server, this is for simple ring servers, if this
