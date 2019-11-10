@@ -1,12 +1,15 @@
 (ns ont-app.prototypes.core
   (:require
    [clojure.set :as set]
+   [clojure.string :as str]
+   ;; 3rd partly libs
+   [taoensso.timbre :as log]
+   ;; ont-app libs
    [ont-app.igraph.core :as igraph :refer [add subtract traverse reduce-s-p-o]]
    [ont-app.igraph.graph :as g]
    [ont-app.vocabulary.core :as voc]
    [ont-app.prototypes.ont :as ont]   
-   [ont-app.igraph-vocabulary.core :as igv]
-   [taoensso.timbre :as log]
+   [ont-app.igraph-vocabulary.core :as igv :refer [mint-kwi]]
    )
 
   )
@@ -17,6 +20,10 @@
   :voc/mapsTo 'ont-app.prototypes.ont
   }
  )
+(def ontology
+  "The supporting ontology for prototypes, as an Igraph.graph, using keyword
+   identifiers interned per ont-app.vocabulary. "
+  ont/ontology)
 
 
 (declare aggregation-policy-cache)
@@ -42,10 +49,6 @@
 ;; NO READER MACROS BELOW THIS POINT
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def ontology
-  "The supporting ontology for prototypes, as an Igraph.graph, using keyword
-   identifiers interned per ont-app.vocabulary. "
-  ont/ontology)
 
 (def prefixed voc/prepend-prefix-declarations)
 
@@ -156,7 +159,6 @@ Where
   [aggregation-policy context acc p os]
   {:pre [(map? acc)]
    }
-  #dbg
   (letfn [(get-missing-parameter-handler [parameter]
             (if-let [on-missing-parameter (:on-missing-parameter context)]
               (on-missing-parameter parameter)
@@ -366,7 +368,96 @@ Where
        (rest queue)])))
 
 
-(comment
+;;;;;;;;;;;;;;;;;;;
+;; COORDINATION
+;;;;;;;;;;;;;;;;;;;;
 
-  )
+(defmethod mint-kwi :proto/Align
+  [head  _ source _ target _ sourceP _ targetP]
+  (keyword (str/join "_" [(str head)
+                          (name source)
+                          (name target)
+                          (name sourceP)
+                          "To"
+                          (name targetP)])))
+
+(defn align [model linking-parameter source target & args]
+  "Returns `model`', modified with coordiation annoations for `linking-parameter`  appropriate to `args`
+Where
+<model> implements the Prototypes vocabulary
+<linking parameter> links <target> to <coordination>, 
+  st. 
+  <source> :proto/hasParameter <linkingParameter> 
+  will implictly map to  <coordination> via:
+  <coordination> :proto/coordinatingProperty <linkingParam>
+
+<source> is the coordinator prototype
+<target> is coordinated by <source>
+<args> := [<source predicate> <target predicate>
+<coordination> is an elaboration of proto:Coordination
+"
+  (letfn [(collect-properties [model [source-p target-p]]
+            (let [alignment (mint-kwi :proto/Align
+                            :proto/source source
+                            :proto/target target
+                            :proto/sourceProperty source-p
+                            :proto/targetProperty target-p)
+                  ]
+              
+              (add model
+                   [[alignment
+                    :proto/elaborates :proto/Align
+                    :proto/source source
+                    :proto/target target
+                    :proto/sourceProperty source-p
+                    :proto/targetProperty target-p
+                    :proto/coordinatingProperty linking-parameter
+                    ]
+                    [source
+                     :proto/alignsTo alignment]
+                    ])))
+          ]
+    (assert (and (not (empty? args))
+                 (even? (count args))))
+    (reduce collect-properties model (partition 2 args))))
+
+(defn project [model linking-parameter source target source-collection-p target-p]
+  "Returns `model`, defining  a <projection>  from `source` to `target`
+with <source>  linked to the <projection> with `linking-parameter`
+and linked to some <collection> with `source-collection-p`, with each
+<elt> in <collection> linked to <source> by `target-p`
+Where
+<model> is informed by the protypes vocabulary
+<projection> describes a mapping from each element of <collection>
+  to an instance of  <target>
+<source> describes something associated with some <collection>
+<target> describes something pertinent to each <elt> in <collection>
+<collection> := [<elt>, ...]
+<linking parameter> links <source> to <projection>, 
+  when this is an open parameter, the projection has not yet been
+  put into effect
+<source-collection-p> is the property that links <source> to <collection>
+<target-p> links <source> to each <target> for <elt>
+"
+  (let [projection (mint-kwi :proto/Project
+                             :proto/source source
+                             :proto/target target
+                             :proto/sourceProperty source-collection-p
+                             :proto/targetProperty target-p)
+
+        ]
+    (add model
+         [[projection
+           :proto/elaborates :proto/Projection
+           :proto/source source
+           :proto/target target
+           :proto/sourceProperty source-collection-p
+           :proto/targetProperty target-p
+           :proto/coordinatingProperty linking-parameter
+           ]
+          [source
+           :proto/projects projection
+           ]
+          ])
+    ))
 

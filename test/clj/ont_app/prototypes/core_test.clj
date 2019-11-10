@@ -32,15 +32,23 @@
 
 (deftest agg-policies
   (testing "Aggregation policies"
-    (is (= (proto/query-for-aggregation-policies test-graph)
-           {:proto/hasParameter :proto/Transclusive,
-            :proto/defaultAggregation :proto/Transclusive,
-            :proto/elaborates :proto/Transclusive,
-            :proto/aggregation :proto/Occlusive
-            :test/p1 :proto/Occlusive,
-            }
-           ))
-
+    (is (= (proto/query-for-aggregation-policies test-graph))
+        {
+         :dc/description :proto/Occlusive
+         :proto/aggregation :proto/Occlusive,
+         :proto/argumentList :proto/Exclusive,
+         :proto/coordinatingProperty :proto/Occlusive,
+         :proto/defaultAggregation :proto/Transclusive,
+         :proto/elaborates :proto/Transclusive,
+         :proto/elementDescription :proto/Occlusive,
+         :proto/hasParameter :proto/Transclusive,
+         :proto/projects :proto/Inclusive,
+         :proto/sourceProperty :proto/Occlusive,
+         :proto/target :proto/Occlusive,
+         :proto/targetProperty :proto/Occlusive,
+         :test/p1 :proto/Occlusive,
+         }
+        )
     (is (= (proto/get-description test-graph :test/Stage1)
            {
             :proto/hasParameter #{:test/testParameter}

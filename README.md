@@ -1,10 +1,11 @@
 # prototypes
 
-FIXME: Write a one-line description of your library/project.
+UNDER CONSTRUCTION
 
-## Overview
+This is code aimed at providing simple knowledge representation within IGraph-compliant models. Among other things it supports default logic.
 
-FIXME: Write a paragraph about the library/project and highlight its goals.
+Watch this space for more complete documentation as the project matures.
+
 
 ## Setup
 
@@ -34,6 +35,6 @@ get live reloading, nor a REPL.
 
 ## License
 
-Copyright © 2014 FIXME
+Copyright © 2019 Eric D. Scott
 
 Distributed under the Eclipse Public License either version 1.0 or (at your option) any later version.
