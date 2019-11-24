@@ -1,8 +1,7 @@
 (ns ont-app.prototypes.core-test
-  {:vann/preferredNamespacePrefix "test"
-   :vann/preferredNamespaceUri "http://example.com/"
-   }
-  (:require [clojure.test :refer :all]
+  (:require #?(:clj [clojure.test :refer :all]
+               :cljs [cljs.test :refer-macros [deftest is testing]]
+               )
             [ont-app.igraph.core :as igraph :refer [normal-form add]]
             [ont-app.igraph.graph :as g]
             [ont-app.prototypes.core :as proto]

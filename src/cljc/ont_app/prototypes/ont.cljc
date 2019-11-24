@@ -63,10 +63,18 @@
 
 (update-ontology
  [
+  [:proto/Vocabulary
+   :rdf/type :igraph/Graph
+   :igraph/imports :igraph/Vocabulary
+   ]
+  [:igraph/Vocabulary
+   :rdf/type :igraph/Graph
+   :igraph/compiledAs igv/ontology
+   ]
   [:proto/PrototypeClass
    :rdfs/subClassOf :rdf/Class
    :rdfs/comment """
-        Refers to a class pertinent to prototypes.
+  Refers to a class pertinent to prototypes.
         """;
    ]
   [:proto/Prototype
@@ -125,7 +133,7 @@
    ]
 
   [:proto/Inclusive
-   :rdfs/subClassOf :proto/AggregationPolicy
+   :rdf/type :proto/AggregationPolicy
    :rdfs/comment """
   Refers to an aggregation policy wherein assertions made by elaborating 
   prototypes will be conjoined with other such assertions within the 
@@ -134,7 +142,7 @@
    ]
 
   [:proto/Occlusive
-   :rdfs/subClassOf :proto/AggregationPolicy
+   :rdf/type :proto/AggregationPolicy
    :rdfs/comment """
   Refers to an aggregation policy wherein assertions made by subordinate
   prototypes override assertions made by superior nodes in the elaboration
@@ -143,7 +151,7 @@
    ]
 
   [:proto/Transclusive
-   :rdfs/subClassOf :proto/AggregationPolicy
+   :rdf/type :proto/AggregationPolicy
    :rdfs/comment """
         Refers to a policy wherein the property in question does not
         attach ot the resulting referent, but rather characterizes
@@ -177,7 +185,7 @@
    :rdfs/comment """
         <p> proto:defaultAggregation <policy>
         asserts that <p> and its subproperties should be assigned 
-        to aggregation policy <policy> if otherwise unspecified.
+        to aggregation policy <policy> unless otherwise unspecified.
         CODE SUPPORT:
         Generally speaking when inferring the description of a prototype, 
         there will be a case statement keyed to
@@ -195,8 +203,10 @@
    :rdfs/comment """
         <prototype> proto:hasParameter <property>
 
-    Asserts that the stages downstream from <prototype> should specify at least
-    one value for <property> to be result in a well-formed description.
+    Asserts that <property> is schematic for the stages downstream
+    from <prototype> , and that a fully specified description should
+    specify at least one value for <property> to be result in a
+    well-formed description.
         """
    ]
 
@@ -207,20 +217,26 @@
    ;; TODO: integrate arg list with clojure.spec
    ;; TODO: add parameter for output clojure.spec
    :proto/hasParameter :igraph/compiledAs
-   :rdfs/comment "Refers to the prototype of an executable function which plays some part in defining some model."
+   :rdfs/comment "
+Refers to the prototype of an executable function which plays some
+part in defining some model.
+"
    ]
 
   [:proto/argumentList
    :proto/aggregation :proto/Exclusive
    :igraph/domain :proto/Function
    :igraph/projectedRange :igraph/Vector
-   :rdfs/comment "Asserts an ordered set of parameters := [:?parameter-name ...]"
+   :rdfs/comment "
+Asserts an ordered set of parameters := [:?parameter-name ...]
+"
    ]
   
   [:proto/function
    :rdfs/domain :proto/Prototype
    :rdfs/range :proto/Function
-   :rdfs/comment "<proto> :proto/function <fn>.
+   :rdfs/comment "
+<proto> :proto/function <fn>.
 Asserts the URI of <fn> for <examplar> of <proto>
 Where 
 <exemplar> is a fully specified elaboration of <proto>
@@ -228,98 +244,11 @@ Where
 <description> is the normal-form description of <exemplar>
 "
    ]
-
-  [:proto/Coordination
-   :proto/hasParameter :proto/source
-   :proto/hasParameter :proto/target
-   :proto/hasParameter :proto/coordinatingProperty
-   :rdfs/comment "
-Refers to a relationship between a source and target prototype where 
-elaboration of the source implies some corresponding elaboration of the
-target.
-"   ]
-
-  [:proto/Projector
-   :proto/hasParameter :proto/sourceProperty
-   :proto/hasParameter :proto/elementDescription
-   :proto/hasParameter :proto/projects
-   :rdfs/comment "
-Refers a a prototype associated with a collection of elements from which we may project prototypes mapped to each element.
-"
-   ]
-  [:proto/elementDescription
-   :proto/aggregation :proto/Occlusive
-   :rdfs/domain :proto/Projector
-   :rdfs/range :proto/Prototype
-   :rdfs/comment "
-<Projector> elementDescription <prototype>
-
-Asserts that <prototype> is an abstract description of each element in 
-<collection>
-"
-   ]
-  [:proto/projects 
-   :rdfs/domain :proto/Projector
-   :rdfs/range :proto/Projection
-   :proto/aggregation :proto/Inclusive
-   :rdfs/comment "
-<projector> projects <projection>
-Asserts that each element of some collection associated with <prototype> coordinates with <projection>, which specifies an abstract prototype for each such element, and other properties pertinent to the coordination."
-   ]
-  [:proto/Projection
-   :proto/elaborates :proto/Alignment
-   :proto/hasParameter :proto/projectionFn
-   :rdfs/comment"
-Refers to a coordination between some projector containing a collectiong, 
-and some target description associated with each element of said collection.
-"
-   ]
-  [:proto/Alignment
-   :proto/elaborates :proto/Coordination
-   :proto/hasParameter :proto/sourceProperty
-   :proto/hasParameter :proto/targetProperty
-   :rdfs/comment "
-Refers to a coordination wherein a property in the source aligns to somee
-corresponding property in the target.
-"
-   ]
-  [:proto/sourceProperty
-   :proto/aggregation :proto/Occlusive
-   :rdfs/domain :proto/Coordination
-   :rdfs/range :proto/Property
-   :rdfs/comment
-   "
-Asserts the property in the source prototype the object of which serves as the value to be coordinated with the target of a coordination, elaboration of which should be propagated to the target.
-"
-   ]
-  [:proto/target
-   :proto/aggregation :proto/Occlusive
-   :rdfs/domain :proto/Coordination
-   :rdfs/range :proto/Prototype
-   :rdfs/comment
-   "
-Asserts the target prototype of a coordination, which should be elaborated 
-in light of elaborations to the source description.
-"
-   ]
-  [:proto/coordinatingProperty
-   :proto/aggregation :proto/Occlusive
-   :rdfs/comment "
-Asserts the property applying between the elaborated source
-description and the coordination specification. One indicates a need
-for said coordination by declaring it as a parameter of the source description.
-"
-   ]
-  [:proto/targetProperty
-   :proto/aggregation :proto/Occlusive
-   :rdfs/comment "
-Asserts the property applicable between fully coordinated source and target 
-elaborations.
-"
-   ]
+  
   
   [:dc/description :proto/aggregation :proto/Occlusive]
 
   ])
+
 
 (def ontology @ontology-ref)

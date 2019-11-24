@@ -5,7 +5,15 @@
    ;; 3rd partly libs
    [taoensso.timbre :as log]
    ;; ont-app libs
-   [ont-app.igraph.core :as igraph :refer [add subtract traverse reduce-s-p-o]]
+   [ont-app.igraph.core :as igraph
+    :refer [add
+            subtract
+            transitive-closure
+            traverse
+            traversal-comp
+            traverse-link
+            reduce-s-p-o
+            ]]
    [ont-app.igraph.graph :as g]
    [ont-app.vocabulary.core :as voc]
    [ont-app.prototypes.ont :as ont]   
@@ -49,8 +57,21 @@
 ;; NO READER MACROS BELOW THIS POINT
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; PROPERTY PATHS
+(def elaborates* (transitive-closure :proto/elaborates))
+
 
 (def prefixed voc/prepend-prefix-declarations)
+
+(def schematic-for
+  "Subject elaborates a stage which declares the object as a parameter, and
+  is thus eligible to fill that parameter (it's forbidden to declare and
+  satisfy a parameter in the same stage of elaboration.)"
+  (traversal-comp [(traverse-link :proto/elaborates)
+                   elaborates*
+                   (traverse-link :proto/hasParameter)]))
+
+
 
 (def agg-policies-sparql-query
   (prefixed
@@ -367,97 +388,22 @@ Where
            (into acc))
        (rest queue)])))
 
+(def has-parameter (proto-p :proto/hasParameter))
 
-;;;;;;;;;;;;;;;;;;;
-;; COORDINATION
-;;;;;;;;;;;;;;;;;;;;
 
-(defmethod mint-kwi :proto/Align
-  [head  _ source _ target _ sourceP _ targetP]
-  (keyword (str/join "_" [(str head)
-                          (name source)
-                          (name target)
-                          (name sourceP)
-                          "To"
-                          (name targetP)])))
 
-(defn align [model linking-parameter source target & args]
-  "Returns `model`', modified with coordiation annoations for `linking-parameter`  appropriate to `args`
-Where
-<model> implements the Prototypes vocabulary
-<linking parameter> links <target> to <coordination>, 
-  st. 
-  <source> :proto/hasParameter <linkingParameter> 
-  will implictly map to  <coordination> via:
-  <coordination> :proto/coordinatingProperty <linkingParam>
+;;;;;;;;;;;;;
+;; UTILITIES
+;;;;;;;;;;;;;
 
-<source> is the coordinator prototype
-<target> is coordinated by <source>
-<args> := [<source predicate> <target predicate>
-<coordination> is an elaboration of proto:Coordination
-"
-  (letfn [(collect-properties [model [source-p target-p]]
-            (let [alignment (mint-kwi :proto/Align
-                            :proto/source source
-                            :proto/target target
-                            :proto/sourceProperty source-p
-                            :proto/targetProperty target-p)
-                  ]
-              
-              (add model
-                   [[alignment
-                    :proto/elaborates :proto/Align
-                    :proto/source source
-                    :proto/target target
-                    :proto/sourceProperty source-p
-                    :proto/targetProperty target-p
-                    :proto/coordinatingProperty linking-parameter
-                    ]
-                    [source
-                     :proto/alignsTo alignment]
-                    ])))
-          ]
-    (assert (and (not (empty? args))
-                 (even? (count args))))
-    (reduce collect-properties model (partition 2 args))))
+^:comparison-fn
+(defn more-specific [g a b]
+  "A comparison operator for elaboration chains"
+  (if (g a elaborates* b)
+    true
+    false))
 
-(defn project [model linking-parameter source target source-collection-p target-p]
-  "Returns `model`, defining  a <projection>  from `source` to `target`
-with <source>  linked to the <projection> with `linking-parameter`
-and linked to some <collection> with `source-collection-p`, with each
-<elt> in <collection> linked to <source> by `target-p`
-Where
-<model> is informed by the protypes vocabulary
-<projection> describes a mapping from each element of <collection>
-  to an instance of  <target>
-<source> describes something associated with some <collection>
-<target> describes something pertinent to each <elt> in <collection>
-<collection> := [<elt>, ...]
-<linking parameter> links <source> to <projection>, 
-  when this is an open parameter, the projection has not yet been
-  put into effect
-<source-collection-p> is the property that links <source> to <collection>
-<target-p> links <source> to each <target> for <elt>
-"
-  (let [projection (mint-kwi :proto/Project
-                             :proto/source source
-                             :proto/target target
-                             :proto/sourceProperty source-collection-p
-                             :proto/targetProperty target-p)
-
-        ]
-    (add model
-         [[projection
-           :proto/elaborates :proto/Projection
-           :proto/source source
-           :proto/target target
-           :proto/sourceProperty source-collection-p
-           :proto/targetProperty target-p
-           :proto/coordinatingProperty linking-parameter
-           ]
-          [source
-           :proto/projects projection
-           ]
-          ])
-    ))
-
+(defn sort-by-more-specific
+  "Sorts elaboration stages on elaborates links"
+  [g stages]
+  (sort (partial more-specific g) stages))

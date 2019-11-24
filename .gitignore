@@ -5,6 +5,7 @@ pom.xml
 /lib/
 /classes/
 /out/
+/resources/test
 /target/
 .lein-deps-sum
 .lein-repl-history
