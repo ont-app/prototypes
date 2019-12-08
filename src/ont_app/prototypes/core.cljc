@@ -21,12 +21,15 @@
 
   )
 
+(def the igraph/unique)
+
 (voc/cljc-put-ns-meta!
  'ont-app.prototypes.core
  {
   :voc/mapsTo 'ont-app.prototypes.ont
   }
  )
+
 (def ontology
   "The supporting ontology for prototypes, as an Igraph.graph, using keyword
    identifiers interned per ont-app.vocabulary. "
@@ -39,6 +42,7 @@
   "SIDE EFFECT: resets caches to initial state."
   (reset! aggregation-policy-cache {})
   )
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; FUN WITH READER MACROS
@@ -297,6 +301,7 @@ Where
   {:pre [(or (= for-properties :all)
              (set? for-properties))
          (map? acc)
+         (vector? q)
          ]
    }
 
@@ -328,6 +333,11 @@ Where
                              (into {} desc)
                              for-properties))))
          
+         collect-next-stages (fn [stages p]
+                               (if-let [next-stage (the (g stage p))
+                                        ]
+                                 (conj stages next-stage)
+                                 stages))
         ]
      [(update-context context (g stage))
       ,
@@ -338,9 +348,11 @@ Where
                  acc
                  (sub-desc (g stage)))
       ,
-      (reduce conj
-              (rest q)
-              (g stage :proto/elaborates))])))
+      (glog/log-value
+       ::elaborate-return
+       (reduce collect-next-stages
+               (vec (rest q))
+               [:proto/modulo :proto/elaborates]))])))
    
 (defn get-description 
   "Returns <description> of `prototype` defined in `g`, maybe using `context`
@@ -350,15 +362,17 @@ Where
 <g> is a graph containing the elaboration chain and supporting
   declarations, such as property aggregation policies.
 "
+  ([g prototype]
+   (get-description g prototype {}))
+  
   ([g prototype context]
    (igraph/traverse g elaborate
                     {}
                     {}
                     [prototype]))
-  ([g prototype]
-   (get-description g prototype {})))
+  )
 
-(defn collapse-description 
+(defn collapse
   "Returns <target>, adding the description inferred from  <prototype> in <source>.
   If <source> and <target> are the same (the default), <prototype> will be
       overwritten.
@@ -369,7 +383,7 @@ Where
   <prototype> is the endpoint of some elaboration chain in <source>
 "
   ([g prototype]
-   (collapse-description g prototype g)
+   (collapse g prototype g)
    )
    ([source prototype target]
     (let [description (get-description source prototype)]

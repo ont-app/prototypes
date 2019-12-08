@@ -9,9 +9,8 @@
   :dependencies [[org.clojure/clojure "1.10.0"]
                  [org.clojure/clojurescript "1.10.520"]
                  [org.clojure/core.async  "0.4.500"]
-                 ;; 3rd party
-                 [com.taoensso/timbre "4.10.0"]
                  ;; ont-app
+                 [ont-app/graph-log "0.1.0-SNAPSHOT"]
                  [ont-app/igraph "0.1.4-SNAPSHOT"]
                  [ont-app/vocabulary "0.1.0-SNAPSHOT"]
                  [ont-app/igraph-vocabulary "0.1.0-SNAPSHOT"]

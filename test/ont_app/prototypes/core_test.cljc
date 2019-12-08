@@ -2,11 +2,14 @@
   (:require #?(:clj [clojure.test :refer :all]
                :cljs [cljs.test :refer-macros [deftest is testing]]
                )
+            [ont-app.graph-log.core :as glog]
             [ont-app.igraph.core :as igraph :refer [normal-form add]]
             [ont-app.igraph.graph :as g]
             [ont-app.prototypes.core :as proto]
             [ont-app.vocabulary.core :as voc]
             ))
+
+(def the igraph/unique)
 
 (deftest ontology-test
   (testing "Ontology declaration should exist"
@@ -61,7 +64,7 @@
             :rdf/type #{:proto/Prototype}}
            ))
     
-    (let [g (proto/install-description test-graph :test/Stage2)]
+    (let [g (proto/collapse test-graph :test/Stage2)]
       (is (= (g :test/Stage2)
              {:test/p1 #{:test/ValueInStage2},
               :test/testParameter #{:test/ParameterInStage2
@@ -69,6 +72,55 @@
               :rdf/type #{:proto/Prototype}})))
     ))
 
+
+(deftest modulo
+  (glog/log-reset!)
+  (let [g (add test-graph
+               [[:test/warJustification
+                 :proto/aggregation :proto/Occlusive
+                 ]
+                [:test/Quaker
+                 :test/attends :test/QuakerMeetings
+                 :test/warJustification :test/Never
+                 ]
+                [:test/Republican
+                 :test/attends :test/RepublicanConventions
+                 :test/warJustification :test/WhenFightingCommunism
+                 ]
+                ])
+        republican-quaker (glog/log-value
+                           ::republican-quaker
+                           (add g
+                                [:test/Nixon
+                                 :proto/elaborates :test/Quaker
+                                 :proto/modulo :test/Republican]))
+        quaker-republican (glog/log-value
+                           ::quaker-republican
+                           (add g
+                                [:test/Nixon
+                                 :proto/elaborates :test/Republican
+                                 :proto/modulo :test/Quaker]))
+        attends (proto/proto-p :test/attends)
+        war-justification (proto/proto-p :test/warJustification)
+        ]
+    (testing "Resolve Nixon Diamond"
+      
+      (is (= (republican-quaker :test/Nixon attends)
+             #{:test/QuakerMeetings
+               :test/RepublicanConventions
+               }))
+      (is (= (the (republican-quaker :test/Nixon war-justification))
+             :test/WhenFightingCommunism))
+      
+      (is (= (quaker-republican :test/Nixon attends)
+             #{:test/QuakerMeetings
+               :test/RepublicanConventions
+               }))
+      (is (= (the (quaker-republican :test/Nixon war-justification))
+             :test/Never))
+      )))
+    
+        
 (def sub-property-test-graph
   (add proto/ontology
        [[:test/subProp
@@ -268,14 +320,14 @@
 (defn finalize-order [orders order-id]
   "Returns `model`' modified to contain a complete description of `order-id`
 Handling hold-the relations."
-  (let [orders' (proto/install-description orders order-id)
+  (let [orders' (proto/collapse orders order-id)
         maybe-hold-toppings (fn [g to-hold]
                               (igraph/subtract
                                g [order-id :pizza/hasTopping to-hold]))
         
         ]
     (reduce maybe-hold-toppings
-            (igraph/subtract orders' order-id :pizza/holdThe)
-            model' order-id :pizza/holdThe)))
+            (igraph/subtract orders' [order-id :pizza/holdThe])
+            orders' order-id :pizza/holdThe)))
 
 
