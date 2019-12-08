@@ -68,7 +68,7 @@
                            :pretty-print false
                            }
                 } ;;min
-               } ;; buids
+               } ;; builds
               } ;; cljsbuild
 
   :profiles {:dev {:dependencies [[binaryage/devtools "0.9.10"]

@@ -93,3 +93,189 @@
             :proto/hasParameter #{:test/otherParameter}}))
     ))
 
+
+;; PIZZA EXAMPLE
+
+(def pizza-world
+  (add proto/ontology
+       [[:pizza/Pizza
+         :rdf/type :proto/Prototype
+         :proto/hasParameter :pizza/hasBase
+         :proto/hasParameter :pizza/hasTopping
+         ]
+        [:pizza/hasBase
+         :proto/aggregation :proto/Occlusive
+         :rdfs/domain :pizza/Pizza
+         :rdfs/range :pizza/Base
+         :rdfs/comment "Asserts the kind of crust of some Pizza"
+         ]
+        [:pizza/hasTopping
+         :proto/aggregation :proto/Inclusive
+         :rdfs/domain :pizza/Pizza
+         :rdfs/range :pizza/Topping
+         :rdfs/comment "Asserts a Topping to put on some Pizza"
+         ]
+        [:pizza/Base
+         :rdf/type :rdfs/Class
+         :rdfs/comment "The crust of a pizza"
+         ]
+        [:pizza/ThickCrust
+         :rdf/type :pizza/Base
+         ]
+        [:pizza/ThinCrust
+         :rdf/type :pizza/Base
+         ]
+        [:pizza/Topping
+         :rdf/type :rdfs/Class
+         :rdfs/comment "Something put on a pizza"
+         ]
+        [:pizza/TomatoTopping 
+         :rdf/type :pizza/Topping
+         ]
+        [:pizza/MozarellaTopping
+         :rdf/type :pizza/Topping
+         ]
+        [:pizza/MushroomTopping
+         :rdf/type :pizza/Topping
+         ]
+        [:pizza/SpicyBeefTopping
+         :rdf/type :pizza/Topping
+         ]
+        [:pizza/AnchovyTopping
+         :rdf/type :pizza/Topping
+         ]
+        [:pizza/PineappleTopping
+         :rdf/type :pizza/Topping
+         ]
+        [:pizza/HamTopping
+         :rdf/type :pizza/Topping
+         ]
+
+        ;; types of pizza
+        [:pizza/ThickCrustPizza
+         :proto/elaborates :pizza/Pizza
+         :pizza/hasBase :pizza/ThickCrust
+         ]
+        [:pizza/VegetarianPizza
+         :proto/elaborates :pizza/ThickCrustPizza
+         :pizza/hasTopping :pizza/MozarellaTopping
+         :pizza/hasTopping :pizza/TomatoTopping
+         ]
+        [:pizza/CarnivorePizza
+         :proto/elaborates :pizza/ThickCrustPizza
+         :pizza/hasTopping :pizza/MozarellaTopping
+         :pizza/hasTopping :pizza/SpicyBeefTopping
+         :pizza/hasTopping :pizza/HamTopping
+         :pizza/hasTopping :pizza/AnchoviesTopping
+         ]
+        [:pizza/PescatarianPizza
+         :proto/elaborates :pizza/VegetarianPizza
+         :pizza/hasTopping :pizza/AnchoviesTopping
+         ]
+        [:pizza/HawaiianPizza
+         :proto/elaborates :pizza/ThickCrustPizza
+         :pizza/hasTopping :pizza/hamTopping
+         :pizza/hasTopping :pizza/pineappleTopping
+         ]
+        ]))
+
+(def order-model ;; Extends pizza-world to deal with preparing orders
+  (add pizza-world
+       [[:pizza/PizzaSpec
+         :proto/elaborates :pizza/Pizza
+         :proto/hasParameter :pizza/size
+         :proto/hasParameter :pizza/charge
+         :rdfs/comment "Refers to an actual Pizza to be made and sold."
+         ]
+        [:pizza/Size
+         :rdf/type :rdfs/Prototype
+         :proto/hasParameter :pizza/diameter
+         :proto/hasParameter :pizza/charge
+         :rdfs/comment "A size offering for a Pizza, with base charge"
+         ]
+        [:pizza/Small
+         :proto/elaborates :pizza/Size
+         :pizza/diameter 10
+         :pizza/charge 1000
+         ]
+        [:pizza/Medium
+         :proto/elaborates :pizza/Size
+         :pizza/diameter 12
+         :pizza/charge 1200
+         ]
+        [:pizza/Large
+         :proto/elaborates :pizza/Size
+         :pizza/diameter 14
+         :pizza/charge 1400
+         ]
+
+        [:pizza/ExtraLarge
+         :proto/elaborates :pizza/Size
+         :pizza/diameter 16
+         :pizza/charge 1600
+         ]
+        [:pizza/Topping
+         :pizza/charge 100
+         :rdfs/comment "Each topping costs a buck"
+         ]
+        
+        [:pizza/size
+         :proto/aggregation :proto/Exclusive
+         :proto/domain :pizza/Spec
+         :proto/range :pizza/Size
+         :rdfs/comment "Asserts the Size of some PizzaSpec"
+         ]
+        [:pizza/diameter
+         :proto/aggregation :proto/Exclusive ;; can only be declared once
+         :rdfs/domain :pizza/PizzaSpec
+         :rdfs/range :xsd/Integer
+         :rdfs/comment "Asserts the diameter of some Pizza in inches"
+         ]
+        [:pizza/charge
+         :proto/aggregation :proto/Exclusive ;; can only be declared once
+         :rdfs/domain :pizza/ProductOffering
+         :rdfs/range :xsd/Integer
+         :rdfs/comment "Asserts the charge for some Pizza in cents"
+         ]
+        [:pizza/ProductOffering
+         :rdf/type :rdfs/Class
+         :rdfs/comment "Refers to any item offered by the shop (and charged for)"
+         ]
+        [:pizza/Order
+         :proto/hasParameter :pizza/hasItem
+         :proto/hasParameter :pizza/total
+         ]
+        [:pizza/hasItem
+         :proto/aggregation :proto/Inclusive
+         :proto/domain :pizza/Order
+         :proto/range :pizza/PizzaSpec
+         ]
+        [:pizza/total
+         :proto/aggregation :proto/Exclusive
+         :proto/domain :pizza/Order
+         :proto/range :xsd/Integer
+         :rdfs/comment "Asserts the total charge for some Order in cents (these are all tax-free :-)"
+         ]
+        [:pizza/holdThe
+         :proto/aggregation :proto/Inclusive
+         :rdfs/domain :pizza/Pizza
+         :rdfs/range :pizza/Topping
+         :rdfs/comment "Do not include some Topping on some Pizza (Overrides hasTopping)"
+         ]
+        ]))
+
+        
+(defn finalize-order [orders order-id]
+  "Returns `model`' modified to contain a complete description of `order-id`
+Handling hold-the relations."
+  (let [orders' (proto/install-description orders order-id)
+        maybe-hold-toppings (fn [g to-hold]
+                              (igraph/subtract
+                               g [order-id :pizza/hasTopping to-hold]))
+        
+        ]
+    (reduce maybe-hold-toppings
+            (igraph/subtract orders' order-id :pizza/holdThe)
+            model' order-id :pizza/holdThe)))
+
+

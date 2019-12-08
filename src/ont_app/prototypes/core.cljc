@@ -2,9 +2,8 @@
   (:require
    [clojure.set :as set]
    [clojure.string :as str]
-   ;; 3rd partly libs
-   [taoensso.timbre :as log]
    ;; ont-app libs
+   [ont-app.graph-log.core :as glog]
    [ont-app.igraph.core :as igraph
     :refer [add
             subtract
@@ -59,11 +58,13 @@
 
 ;; PROPERTY PATHS
 (def elaborates* (transitive-closure :proto/elaborates))
+(def elaborates+ (traversal-comp [(traverse-link :proto/elaborates)
+                                  (transitive-closure :proto/elaborates)]))
 
 
 (def prefixed voc/prepend-prefix-declarations)
 
-(def schematic-for
+#_(def old-schematic-for
   "Subject elaborates a stage which declares the object as a parameter, and
   is thus eligible to fill that parameter (it's forbidden to declare and
   satisfy a parameter in the same stage of elaboration.)"
@@ -71,7 +72,25 @@
                    elaborates*
                    (traverse-link :proto/hasParameter)]))
 
-
+(declare proto-p)
+^:traversal-fn
+(defn schematic-for
+  "Subject elaborates a stage which declares the object as a parameter, and
+  is thus eligible to fill that parameter (it's forbidden to declare and
+  satisfy a parameter in the same stage of elaboration.)"
+  [g c sacc q]
+  (let [s (first q)
+        ]
+      [c ;; no context involvement
+       ,
+       (set/union sacc
+                  (set/difference
+                   ;; locally declared parameters disqualified...
+                   (g s (proto-p :proto/hasParameter))
+                   (g s :proto/hasParameter)))
+       ,
+       (rest q)
+       ]))
 
 (def agg-policies-sparql-query
   (prefixed
@@ -197,12 +216,11 @@ Where
               (if-let [handler (get-missing-parameter-handler parameter)]
                 (let [it (handler acc parameter)]
                   (when (= it acc)
-                    (log/warn "Hander for " parameter "made no change"))
+                    (glog/log ::handler-made-no-change :log/parameter parameter))
                   it)
                 ;;else no spec and no handler
                 (do
-                  #_(log/debug "No value and no handler supplied for parameter "
-                            parameter)
+                  (glog/log ::no-value-or-handler :log/parameter parameter)
                   ;; Pass it through as an unsatisfied parameter
                   (assoc acc
                          :proto/hasParameter
@@ -243,7 +261,7 @@ Where
         acc))
       ))
 
-(def elab-trace (atom []))
+
 ^:traversal-fn
 (defn elaborate
   "
@@ -311,16 +329,18 @@ Where
                              for-properties))))
          
         ]
-    [(update-context context (g stage))
-     (reduce-kv (partial collect-prototype-properties
-                         (get-aggregation-policy g)
-                         context
-                         )
-                acc
-                (sub-desc (g stage)))
-     (reduce conj
-             (rest q)
-             (g stage :proto/elaborates))])))
+     [(update-context context (g stage))
+      ,
+      (reduce-kv (partial collect-prototype-properties
+                          (get-aggregation-policy g)
+                          context
+                          )
+                 acc
+                 (sub-desc (g stage)))
+      ,
+      (reduce conj
+              (rest q)
+              (g stage :proto/elaborates))])))
    
 (defn get-description 
   "Returns <description> of `prototype` defined in `g`, maybe using `context`
@@ -338,7 +358,7 @@ Where
   ([g prototype]
    (get-description g prototype {})))
 
-(defn install-description 
+(defn collapse-description 
   "Returns <target>, adding the description inferred from  <prototype> in <source>.
   If <source> and <target> are the same (the default), <prototype> will be
       overwritten.
@@ -349,14 +369,12 @@ Where
   <prototype> is the endpoint of some elaboration chain in <source>
 "
   ([g prototype]
-   (install-description g prototype g)
+   (collapse-description g prototype g)
    )
    ([source prototype target]
     (let [description (get-description source prototype)]
       (if (empty? description)
-        (let []
-          (log/warn "Empty description for " prototype)
-          target)
+          (glog/log-value ::empty-description target)
         ;; else not empty
         (add (if (= source target)
                (subtract target [prototype])

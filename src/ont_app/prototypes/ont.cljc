@@ -95,6 +95,7 @@
   [:proto/elaborates
    :rdf/type :proto/ProtypeProperty
    :proto/aggregation :proto/Transclusive
+   :owl/cardinality 1
    :rdfs/comment """
         <subordinate> proto:elaborates <superordinate>.
   
@@ -103,13 +104,54 @@
 
     CODE SUPPORT: this drives a traversal from stage to stage, collecting
     values from the attatched properties based on their aggregation 
-    policies.
+    policies. Seated in the ont-app.prototypes/core/elaborates traversal 
+    function.
     
         """
    :rdfs/domain :proto/Prototype
    :rdfs/range :proto/Prototype
    :owl/seeAlso :proto/AggregationPolicy
+   :owl/seeAlso :proto/modulo
    ]
+  [:proto/modulo
+   :rdfs/subPropertyOf :proto/elaborates
+   :proto/aggregation :proto/Transclusive
+   :owl/cardinality 1
+   :rdfs/comment """
+        <subordinate> proto:elaborates <superordinate1>.
+        <subordinate> proto:modulo <superordinate2>.
+        Asserts that <subordinate> acquires properties from both 
+        <superordinate1> and <superordinate2>
+        subject to the proto:ElaborationPolicy of said properties, 
+        But that <subordinate2> will take precedence in resolving occlusion.
+
+        So for the famous 'Nixon Diamond':
+
+        justificationForWar aggregation Occlusive
+        Republican justificationForWar JustifiedWhenFightingCommunism
+        Quaker justificationForWar NeverJustified
+
+        Nixon elaborates Quaker modulo Republican
+        Asserts that Nixon is _not_ a pacifist in spite of his Quarkerism
+
+        whereas
+
+        Nixon elaborates Republican modulo Quaker
+        Specifies that Nixon _is_ a pacifist, in spite of his Republicanism.
+           
+
+    CODE SUPPORT: this drives a traversal from stage to stage, collecting
+    values from the attatched properties based on their aggregation 
+    policies. Seated in the ont-app.prototypes/core/elaborates traversal 
+    function.
+    
+        """
+   :rdfs/domain :proto/Prototype
+   :rdfs/range :proto/Prototype
+   :owl/seeAlso :proto/AggregationPolicy
+   :owl/seeAlso :proto/elaborates
+   ]
+   
   
   [:proto/AggregationPolicy>
    :rdf/type  :proto/PrototypeClass
@@ -244,7 +286,6 @@ Where
 <description> is the normal-form description of <exemplar>
 "
    ]
-  
   
   [:dc/description :proto/aggregation :proto/Occlusive]
 
