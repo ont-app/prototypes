@@ -3,9 +3,18 @@
                :cljs [cljs.test :refer-macros [deftest is testing]]
                )
             [ont-app.graph-log.core :as glog]
-            [ont-app.igraph.core :as igraph :refer [normal-form add]]
+            [ont-app.igraph.core :as igraph
+             :refer [add
+                     normal-form
+                     subtract]]
             [ont-app.igraph.graph :as g]
-            [ont-app.prototypes.core :as proto]
+            [ont-app.igraph-vocabulary.core :as igv]
+            [ont-app.prototypes.core :as proto
+             :refer [collapse
+                     get-description
+                     proto-p
+                     ]
+             ]
             [ont-app.vocabulary.core :as voc]
             ))
 
@@ -51,20 +60,20 @@
          :test/p1 :proto/Occlusive,
          }
         )
-    (is (= (proto/get-description test-graph :test/Stage1)
+    (is (= (get-description test-graph :test/Stage1)
            {
             :proto/hasParameter #{:test/testParameter}
             :test/p1 #{:test/ValueInStage1},
             :rdf/type #{:proto/Prototype}
             }))
            
-    (is (= (proto/get-description test-graph :test/Stage2)
+    (is (= (get-description test-graph :test/Stage2)
            {:test/testParameter #{:test/ParameterInStage2},
             :test/p1 #{:test/ValueInStage2},
             :rdf/type #{:proto/Prototype}}
            ))
     
-    (let [g (proto/collapse test-graph :test/Stage2)]
+    (let [g (collapse test-graph :test/Stage2)]
       (is (= (g :test/Stage2)
              {:test/p1 #{:test/ValueInStage2},
               :test/testParameter #{:test/ParameterInStage2
@@ -138,7 +147,7 @@
   
 (deftest sub-property-support
   (testing "Sub-properties should satisfy parameters for their supers."
-    (is (= (proto/get-description sub-property-test-graph :test/stage1)
+    (is (= (get-description sub-property-test-graph :test/stage1)
            {:test/subProp #{1},
             :rdf/type #{:proto/Prototype},
             ;; subProp fulfills testParameter...
@@ -193,7 +202,7 @@
         [:pizza/SpicyBeefTopping
          :rdf/type :pizza/Topping
          ]
-        [:pizza/AnchovyTopping
+        [:pizza/AnchoviesTopping
          :rdf/type :pizza/Topping
          ]
         [:pizza/PineappleTopping
@@ -212,6 +221,7 @@
          :proto/elaborates :pizza/ThickCrustPizza
          :pizza/hasTopping :pizza/MozarellaTopping
          :pizza/hasTopping :pizza/TomatoTopping
+         :pizza/hasTopping :pizza/MushroomTopping
          ]
         [:pizza/CarnivorePizza
          :proto/elaborates :pizza/ThickCrustPizza
@@ -235,34 +245,28 @@
   (add pizza-world
        [[:pizza/PizzaSpec
          :proto/elaborates :pizza/Pizza
-         :proto/hasParameter :pizza/size
+         :proto/hasParameter :pizza/diameter
          :proto/hasParameter :pizza/charge
          :rdfs/comment "Refers to an actual Pizza to be made and sold."
          ]
-        [:pizza/Size
-         :rdf/type :rdfs/Prototype
-         :proto/hasParameter :pizza/diameter
-         :proto/hasParameter :pizza/charge
-         :rdfs/comment "A size offering for a Pizza, with base charge"
-         ]
         [:pizza/Small
-         :proto/elaborates :pizza/Size
+         :proto/elaborates :pizza/PizzaSpec
          :pizza/diameter 10
          :pizza/charge 1000
          ]
         [:pizza/Medium
-         :proto/elaborates :pizza/Size
+         :proto/elaborates :pizza/PizzaSpec
          :pizza/diameter 12
          :pizza/charge 1200
          ]
         [:pizza/Large
-         :proto/elaborates :pizza/Size
+         :proto/elaborates :pizza/PizzaSpec
          :pizza/diameter 14
          :pizza/charge 1400
          ]
 
         [:pizza/ExtraLarge
-         :proto/elaborates :pizza/Size
+         :proto/elaborates :pizza/PizzaSpec
          :pizza/diameter 16
          :pizza/charge 1600
          ]
@@ -294,8 +298,14 @@
          :rdfs/comment "Refers to any item offered by the shop (and charged for)"
          ]
         [:pizza/Order
+         :proto/hasParameter :pizza/order
          :proto/hasParameter :pizza/hasItem
          :proto/hasParameter :pizza/total
+         ]
+        [:pizza/order
+         :proto/aggregation :proto/Exclusive
+         :rdfs/domain :pizza/Order
+         :rdfs/range :xsd/Integer
          ]
         [:pizza/hasItem
          :proto/aggregation :proto/Inclusive
@@ -316,18 +326,93 @@
          ]
         ]))
 
-        
-(defn finalize-order [orders order-id]
+
+(defn finalize-order [orders order]
   "Returns `model`' modified to contain a complete description of `order-id`
 Handling hold-the relations."
-  (let [orders' (proto/collapse orders order-id)
-        maybe-hold-toppings (fn [g to-hold]
-                              (igraph/subtract
-                               g [order-id :pizza/hasTopping to-hold]))
+  (let [
+        maybe-hold-toppings (fn [pizza g to-hold]
+                              (glog/log ::starting-hold-toppings
+                                        :log/pizza pizza
+                                        :log/g g
+                                        :log/to-hold to-hold)
+                              (glog/log-value
+                               ::hold-toppings-return
+                               (igraph/subtract
+                                g
+                                [pizza :pizza/hasTopping to-hold])))
+        has-charge (proto-p :pizza/charge)
+        collect-topping-charges (fn [pizza g topping]
+                                  (glog/log ::pt1)
+                                  (let [charge (g pizza :pizza/charge)]
+                                    (glog/log ::pt2)
+                                    (add (subtract g [pizza :pizza/charge])
+                                         [pizza
+                                          :pizza/charge
+                                          (+ charge
+                                             (the (g topping has-charge)))])))
         
+        finalize-item (fn [g item]
+                        (as->
+                            (collapse g item)
+                            g
+                          (reduce (partial maybe-hold-toppings item)
+                                  g
+                                  (glog/log-value
+                                   ::hold-the
+                                   (g item :pizza/holdThe)))
+                          
+                          (reduce (partial collect-topping-charges
+                                           item)
+                                  g
+                                  (g item :pizza/hasTopping))))
+                        
         ]
-    (reduce maybe-hold-toppings
-            (igraph/subtract orders' [order-id :pizza/holdThe])
-            orders' order-id :pizza/holdThe)))
+    
+    (as-> (collapse orders order)
+        g
+      (reduce finalize-item g (g order :pizza/hasItem)))))
+
+
+
+(deftest pizza-example
+  (glog/log-reset!)
+  (let [order-id 123
+        order (igv/mint-kwi :pizza/Pizza :pizza/order order-id)
+        pizza (igv/mint-kwi :pizza/Pizza
+                            :pizza/order order-id
+                            :pizza/item-number 1)
+        todays-orders (add order-model
+                           [[order
+                             :rdf/type :pizza/Order
+                             :pizza/order order-id
+                             :pizza/hasItem pizza
+                             ]
+                            [pizza
+                             :proto/elaborates :pizza/PescatarianPizza
+                             :proto/modulo :pizza/Large
+                             :pizza/holdThe :pizza/AnchoviesTopping
+                             ]])
+        finalized-orders (finalize-order todays-orders order)
+        ]
+    (testing "Put together a pizza order"
+      (is (= (the (todays-orders order :pizza/order))
+             order-id))
+      (is (= (the (todays-orders order :pizza/hasItem))
+             pizza))
+      (is (= (todays-orders pizza (proto/proto-p :pizza/hasTopping))
+             #{:pizza/AnchoviesTopping
+               :pizza/MozarellaTopping
+               :pizza/MushroomTopping
+               :pizza/TomatoTopping
+               }))
+      (is (= (the (todays-orders pizza (proto/proto-p :pizza/diameter)))
+             14))
+      (is (= (the (todays-orders pizza (proto/proto-p :pizza/charge)))
+             1400))
+      #_(is (= (finalized-orders order)
+             nil))
+
+      )))
 
 

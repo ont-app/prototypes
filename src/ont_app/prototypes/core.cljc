@@ -338,22 +338,25 @@ Where
                                         ]
                                  (conj stages next-stage)
                                  stages))
-        ]
-     [(update-context context (g stage))
-      ,
-      (reduce-kv (partial collect-prototype-properties
-                          (get-aggregation-policy g)
-                          context
-                          )
-                 acc
-                 (sub-desc (g stage)))
-      ,
-      (glog/log-value
-       ::elaborate-return
+         ]
+     (glog/log-value
+      ::elaborate-return
+      [:log/stage stage]
+      [(update-context context (g stage))
+       ,
+       (reduce-kv (partial collect-prototype-properties
+                           (get-aggregation-policy g)
+                           context
+                           )
+                  acc
+                  (sub-desc (g stage)))
+       ,
        (reduce collect-next-stages
                (vec (rest q))
-               [:proto/modulo :proto/elaborates]))])))
-   
+               [:proto/modulo :proto/elaborates])]))))
+
+
+
 (defn get-description 
   "Returns <description> of `prototype` defined in `g`, maybe using `context`
 Where
